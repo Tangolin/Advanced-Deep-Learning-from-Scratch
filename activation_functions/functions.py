@@ -146,6 +146,29 @@ def swish(x):
 def d_swish(x):
     return sigmoid(x) * (1+x*(1-sigmoid(x))) #double check that maybe, but I think my math is ok
 
+def ELiSH(x):
+    # Exponential linear Squashing
+    x[np.where(x>=0)] = swish(x[np.where(x>=0)])
+    x[np.where(x<0)] = (np.exp(x[np.where(x<0)])-1) / (1+np.exp(-x[np.where(x<0)]))
+    return x
+
+def d_ELiSH(x):
+    x[np.where(x>=0)] = d_swish(x[np.where(x>=0)])
+    x[np.where(x<0)] = (np.exp(x[np.where(x<0)])/(1+np.exp(x[np.where(x<0)]))) - (1 /(np.exp(x[np.where(x<0)])+1)**2)  # not 100% sure on my math, and it can probably be simplified
+    return x
+
+def Hard_ELiSH(x):
+    # Hard Exponential linear Squashing
+    x[np.where(x>=0)] *= hard_sigmoid(x[np.where(x>=0)])
+    x[np.where(x<0)] = (np.exp(x[np.where(x<0)])-1) * hard_sigmoid(x[np.where(x<0)])
+    return x
+
+def d_Hard_ELiSH(x):
+    x[np.where(x>=0)] = hard_sigmoid(x[np.where(x>=0)]) + x[np.where(x>=0)]*d_hard_sigmoid(x[np.where(x>=0)])
+    x[np.where(x<0)] = np.exp(x[np.where(x<0)]) * hard_sigmoid(x[np.where(x<0)]) + (np.exp(x[np.where(x<0)])-1) * d_hard_sigmoid(x[np.where(x<0)])
+    # again, let's check my math on that
+    return x
+
 def plot(func, start=-5, end=5, step=0.05, hold_on=False):
     x = np.arange(start,end,0.05)
     plt.plot(x, func(x.copy()))
@@ -154,5 +177,5 @@ def plot(func, start=-5, end=5, step=0.05, hold_on=False):
 
 
 
-plot(swish, hold_on=True)
-plot(d_swish)
+plot(d_Hard_ELiSH, hold_on=True)
+plot(Hard_ELiSH)
