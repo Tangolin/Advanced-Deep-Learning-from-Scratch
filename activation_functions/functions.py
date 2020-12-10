@@ -57,14 +57,7 @@ def soft_sign(x):
     return x / (np.abs(x) + 1)
 
 def d_soft_sign(x):
-    """x[np.where(x<0)] = 1/((1-x[np.where(x<0)])**2)
-    x[np.where(x==0)] = 0
-    x[np.where(x>0)] = (1+ 2*x[np.where(x>0)]) / ((1+x)**2)"""
-
-    x[np.where(x<0)] = (x[np.where(x<0)]-x[np.where(x<0)]**2) / ((1-x[np.where(x<0)])**2)
-    x[np.where(x==0)] = 0
-    x[np.where(x>0)] = (-x[np.where(x>0)]**2 - 1) / ((x[np.where(x>0)]+1)**2)
-    return x
+    return x / (np.abs(x)+1)**2
 
 def plot(func, start=-5, end=5, step=0.05, hold_on=False):
     x = np.arange(start,end,0.05)
