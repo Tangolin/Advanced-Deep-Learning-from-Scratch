@@ -5,6 +5,12 @@ import matplotlib.pyplot as plt
 Allows for scalar and vector inputs (some also for matrix)
 """
 
+def linear(x):
+    return x
+
+def d_linear(x):
+    return 1
+
 def sigmoid(x):
     return 1/ (1+np.exp(-x))
 
@@ -12,7 +18,8 @@ def d_sigmoid(x):
     return sigmoid(x)*(1-sigmoid(x))
 
 def hard_sigmoid(x):
-    return np.clip((x+1)/2, 0, 1)
+    #return np.clip((x+1)/2, 0, 1)
+    return np.clip((x+1)/2, 0.001, 0.999)
 
 def d_hard_sigmoid(x):
     x[np.where(np.logical_and(x>0, x<1))] = 1/2
@@ -55,9 +62,10 @@ def d_soft_sign(x):
     return x / (np.abs(x)+1)**2
 
 def ReLU(x):
-    return np.max(np.c_[np.zeros((np.shape(x)[0])), x], axis=1)
+    return x * (x>0)
 
 def d_ReLU(x):
+    x = x.copy()
     x[np.where(x<=0)] = 0
     x[np.where(x>0)] = 1
     return x
@@ -169,13 +177,17 @@ def d_Hard_ELiSH(x):
     # again, let's check my math on that
     return x
 
-def plot(func, start=-5, end=5, step=0.05, hold_on=False):
+def plot(func, start=-5, end=5, step=0.05, hold_on=False, shape=False):
     x = np.arange(start,end,0.05)
+    if shape:
+        print(x.shape)
     plt.plot(x, func(x.copy()))
     if not hold_on:
         plt.show()
 
+    if shape:
+        print(func(x.copy()).shape)
 
 
-plot(d_Hard_ELiSH, hold_on=True)
-plot(Hard_ELiSH)
+
+#plot(ReLU, hold_on=False, shape=True)
