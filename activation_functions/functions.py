@@ -125,17 +125,19 @@ def d_ELUs(x, a=1):
 def PELU(x, a=1, b=1, c=1):
     # Parametric Exponential Linear Unit                        ##### not working (1,1,1) should return ELU
     x[np.where(x>0)] = c*x[np.where(x>0)]
-    x[np.where(x<=0)] = a*np.exp(x[np.where(x<=0)]/b)
+    x[np.where(x<=0)] = a*np.exp(x[np.where(x<=0)]/b) #updated
     return x
 
 def d_PELU(x, a, b, c):
-    #
-    pass
+    x[np.where(x>0)] = c
+    x[np.where(x<=0)] = (a/b)*np.exp(x[np.where(x<=0)]/b)
+    return x
 
 def SELU(x, a=1.6733, r=1.0507):
     # Scaled Exponential Linear Units
     x[np.where(x<=0)] = a*np.exp(x[np.where(x<=0)])-a
     return r*x
+
 def d_SELU(x, a=1.6733, r=1.0507):
     x[np.where(x>0)] = 1
     x[np.where(x<=0)] = a*r*np.exp(x[np.where(x<=0)])
@@ -152,7 +154,7 @@ def swish(x):
     return x * sigmoid(x)
 
 def d_swish(x):
-    return sigmoid(x) * (1+x*(1-sigmoid(x))) #double check that maybe, but I think my math is ok
+    return sigmoid(x) * (x * d_sigmoid(x)) #updated
 
 def ELiSH(x):
     # Exponential linear Squashing
@@ -162,7 +164,7 @@ def ELiSH(x):
 
 def d_ELiSH(x):
     x[np.where(x>=0)] = d_swish(x[np.where(x>=0)])
-    x[np.where(x<0)] = (np.exp(x[np.where(x<0)])/(1+np.exp(x[np.where(x<0)]))) - (1 /(np.exp(x[np.where(x<0)])+1)**2)  # not 100% sure on my math, and it can probably be simplified
+    x[np.where(x<0)] = -2 * d_sigmoid(x)  #updated
     return x
 
 def Hard_ELiSH(x):
