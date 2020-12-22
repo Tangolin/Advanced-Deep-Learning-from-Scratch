@@ -109,7 +109,7 @@ def compute_gradient(X, y, theta_1, theta_2, theta_3):
 
 def evaluate(theta_1, theta_2, theta_3):
     pred = np.argmax(predict(X_test, theta_1, theta_2, theta_3),axis=1)
-    return = np.sum(pred==np.argmax(y_test,axis=1))/len(y_test)
+    return np.sum(pred==np.argmax(y_test,axis=1))/len(y_test)
 
 def train(X, y, theta_1, theta_2, theta_3):
     lr = 5e-1#8e-2
