@@ -1,23 +1,23 @@
 import numpy as np
 import scipy.io
-from sklearn.model_selection import train_test_split
-from scipy.optimize import fmin_cg
 import matplotlib.pyplot as plt
 
 from keras.utils import to_categorical
+from sklearn.model_selection import train_test_split
 
 # open the .mat data file
 data = scipy.io.loadmat("data/ex4data1.mat")
 m,n = np.shape(data['X'])   # trainind data shape m=rows, n=features
-X = np.c_[np.ones(m), data['X']] #np.array(data['X'])#np.c_[np.ones(m), data['X']]
+X = np.c_[np.ones(m), data['X']]
 y = data['y'].reshape(-1)
+
 num_labels = np.unique(y).size
+lambda_ = 3
+
 y[np.where(y==10)] = 0
 y = to_categorical(y)
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-lambda_ = 1
-print(X_train.shape)
-print(X_test.shape)
 
 
 def initialize_rndm_weights(l_in, l_out):
@@ -31,18 +31,23 @@ def initialize_rndm_weights(l_in, l_out):
     epsilon_init = .12
     return np.random.uniform(size=(l_out, 1+l_in)) * 2 * epsilon_init - epsilon_init
 
+
 def softmax(x):
     exps = np.exp(x)
     return (exps.T / np.sum(exps,axis=1)).T
 
+
 def d_softmax(x):
     return softmax(x) * (1-softmax(x))
+
 
 def ReLU(x):
     return x * (x>0)
 
+
 def d_ReLU(x):
     return (x>0)
+
 
 def predict(X, theta_1, theta_2, theta_3):
     # Layer 1
@@ -63,6 +68,7 @@ def compute_loss(X, y, theta_1, theta_2, theta_3):
     h = predict(X, theta_1, theta_2, theta_3)
     J = -np.sum(y*np.log(h), axis=0)
     return J
+
 
 def compute_gradient(X, y, theta_1, theta_2, theta_3):
     # Layer 1
@@ -103,31 +109,44 @@ def compute_gradient(X, y, theta_1, theta_2, theta_3):
 
 def evaluate(theta_1, theta_2, theta_3):
     pred = np.argmax(predict(X_test, theta_1, theta_2, theta_3),axis=1)
-    accuracy = np.sum(pred==np.argmax(y_test,axis=1))/len(y_test)
-    print(accuracy)
+    return = np.sum(pred==np.argmax(y_test,axis=1))/len(y_test)
 
 def train(X, y, theta_1, theta_2, theta_3):
-    lr = 5e-2
-    EPOCHS = 15
-    m = 1#4_000
-    iterations = 500
+    lr = 5e-1#8e-2
+    EPOCHS = 5
+    iterations = 150
+    plot = True
+    loss_history = []
+    accuracy_history = []
     for epoch in range(EPOCHS):
         for i in range(iterations):
             g_theta_1, g_theta_2, g_theta_3 = compute_gradient(X, y, theta_1, theta_2, theta_3)
-            if not i%50:
-                loss = compute_loss(X, y, theta_1, theta_2, theta_3)
-                print(f"{epoch}:    Loss: {np.sum(loss)}")
-                print(f"Gradients:  {np.sum([g_theta_1.sum(), g_theta_2.sum(), g_theta_3.sum()])}")
-                print(f"Gradients:  {np.sum([theta_1.sum(), theta_2.sum(), theta_3.sum()])}")
-                print(evaluate(theta_1, theta_2, theta_3))
-                print("\n")
+            if not (i+1)%25:
+                loss = np.sum(compute_loss(X, y, theta_1, theta_2, theta_3))
+                accuracy = evaluate(theta_1, theta_2, theta_3)
+                print(f"{epoch} || {i}/{iterations}:\tLoss: {loss:.2f}\taccuracy: {accuracy:.2f}", end='\r')
+                if plot:
+                    loss_history.append(loss)
+                    accuracy_history.append(accuracy)
+            theta_1 -= (lr)*g_theta_1
+            theta_2 -= (lr)*g_theta_2
+            theta_3 -= (lr)*g_theta_3
+        print("")
 
-            theta_1 -= (lr/m)*g_theta_1
-            theta_2 -= (lr/m)*g_theta_2
-            theta_3 -= (lr/m)*g_theta_3
 
-        loss = compute_loss(X, y, theta_1, theta_2, theta_3)
-        print(f"{epoch}:    Loss: {loss}")
+    if plot:
+        fig, ax1 = plt.subplots()
+        color_1, color_2 = "tab:red", "tab:blue"
+        ax1.set_ylabel('Loss', color=color_1)
+        ax1.plot(loss_history, color=color_1)
+        ax1.tick_params(axis='y', labelcolor=color_1)
+
+        ax2 = ax1.twinx()
+        ax2.set_ylabel('Accuracy', color=color_2)
+        ax2.plot(accuracy_history, label="Accuracy")
+        ax2.tick_params(axis='y', labelcolor=color_2)
+        fig.tight_layout()
+        plt.show()
     return theta_1, theta_2, theta_3
 
 
@@ -151,4 +170,4 @@ def initialize_and_train(X, y):
 
 
 theta_1, theta_2, theta_3 = initialize_and_train(X=X_train, y=y_train)
-compute_loss(X, y, theta_1, theta_2, theta_3)
+print(f"Training concluded. Accuracy on X_test: {evaluate(theta_1, theta_2, theta_3)}")
