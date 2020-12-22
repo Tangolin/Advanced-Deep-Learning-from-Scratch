@@ -16,6 +16,8 @@ y[np.where(y==10)] = 0
 y = to_categorical(y)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 lambda_ = 1
+print(X_train.shape)
+print(X_test.shape)
 
 
 def initialize_rndm_weights(l_in, l_out):
@@ -30,10 +32,8 @@ def initialize_rndm_weights(l_in, l_out):
     return np.random.uniform(size=(l_out, 1+l_in)) * 2 * epsilon_init - epsilon_init
 
 def softmax(x):
-    #print(x)
-    #i = input()
     exps = np.exp(x)
-    return exps/np.sum(exps)
+    return (exps.T / np.sum(exps,axis=1)).T
 
 def d_softmax(x):
     return softmax(x) * (1-softmax(x))
@@ -61,7 +61,7 @@ def predict(X, theta_1, theta_2, theta_3):
 
 def compute_loss(X, y, theta_1, theta_2, theta_3):
     h = predict(X, theta_1, theta_2, theta_3)
-    J = -np.sum(y*np.log(h), axis=1)
+    J = -np.sum(y*np.log(h), axis=0)
     return J
 
 def compute_gradient(X, y, theta_1, theta_2, theta_3):
@@ -86,10 +86,8 @@ def compute_gradient(X, y, theta_1, theta_2, theta_3):
 
 
     delta_3 = z_3 - y
-    #delta_2 = np.dot(delta_3, theta_3) * d_ReLU(np.c_[np.ones(np.shape(z_2)[0],) ,z_2])
     delta_2 = np.dot(delta_3, theta_3) * d_ReLU(z_2)
     delta_2 = delta_2[:, 1:]
-    #delta_1 = np.dot(delta_2, theta_2) * d_ReLU(np.c_[np.ones(np.shape(z_1)[0],) ,z_1])
     delta_1 = np.dot(delta_2, theta_2) * d_ReLU(z_1)
     delta_1 = delta_1[:, 1:]
 
@@ -103,23 +101,34 @@ def compute_gradient(X, y, theta_1, theta_2, theta_3):
 
     return theta_1_grad, theta_2_grad, theta_3_grad
 
+def evaluate(theta_1, theta_2, theta_3):
+    pred = np.argmax(predict(X_test, theta_1, theta_2, theta_3),axis=1)
+    accuracy = np.sum(pred==np.argmax(y_test,axis=1))/len(y_test)
+    print(accuracy)
 
 def train(X, y, theta_1, theta_2, theta_3):
-    lr = 2e-3
+    lr = 5e-2
     EPOCHS = 15
-    iterations = 400
+    m = 1#4_000
+    iterations = 500
     for epoch in range(EPOCHS):
         for i in range(iterations):
             g_theta_1, g_theta_2, g_theta_3 = compute_gradient(X, y, theta_1, theta_2, theta_3)
-            #print(g_theta_1)
-            #print(g_theta_2)
-            #print(g_theta_3)
-            theta_1 -= lr*g_theta_1
-            theta_2 -= lr*g_theta_2
-            theta_3 -= lr*g_theta_3
+            if not i%50:
+                loss = compute_loss(X, y, theta_1, theta_2, theta_3)
+                print(f"{epoch}:    Loss: {np.sum(loss)}")
+                print(f"Gradients:  {np.sum([g_theta_1.sum(), g_theta_2.sum(), g_theta_3.sum()])}")
+                print(f"Gradients:  {np.sum([theta_1.sum(), theta_2.sum(), theta_3.sum()])}")
+                print(evaluate(theta_1, theta_2, theta_3))
+                print("\n")
+
+            theta_1 -= (lr/m)*g_theta_1
+            theta_2 -= (lr/m)*g_theta_2
+            theta_3 -= (lr/m)*g_theta_3
 
         loss = compute_loss(X, y, theta_1, theta_2, theta_3)
         print(f"{epoch}:    Loss: {loss}")
+    return theta_1, theta_2, theta_3
 
 
 
@@ -143,4 +152,3 @@ def initialize_and_train(X, y):
 
 theta_1, theta_2, theta_3 = initialize_and_train(X=X_train, y=y_train)
 compute_loss(X, y, theta_1, theta_2, theta_3)
-#predict(X, theta_1, theta_2, theta_3)
