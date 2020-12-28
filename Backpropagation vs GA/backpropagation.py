@@ -5,11 +5,16 @@ import matplotlib.pyplot as plt
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
 
-# open the .mat data file
+#file processing
 data = scipy.io.loadmat("data/ex4data1.mat")
-m,n = np.shape(data['X'])   # trainind data shape m=rows, n=features
-X = np.c_[np.ones(m), data['X']]
-y = data['y'].reshape(-1)
+m,n = np.shape(data['X'])   #m = example size, n = feature size
+X = np.c_[np.ones(m), data['X']] #concatenates the arrays in the second axis(horizontal axis)
+                                 #e.g. if shape = (3,1) and (3,2), it produces shape (3,3)
+    
+y = data['y'].reshape(-1) #reshape the array as long as it is compatible
+                          #e.g. we can reshape (3,4) into (1,-1), the -1 just means we dont know
+                          #what should be the dimension and it is for numpy to figure out.
+                          #reshape(-1) reshapes into a 1D array
 
 num_labels = np.unique(y).size
 lambda_ = 3
@@ -17,9 +22,10 @@ lambda_ = 3
 y[np.where(y==10)] = 0
 y = to_categorical(y)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2) #shuffles the data and split them
+                                                                         #according to the ratio specified
 
-
+#produce weights between layers
 def initialize_rndm_weights(l_in, l_out):
     """
     Input:
@@ -34,8 +40,9 @@ def initialize_rndm_weights(l_in, l_out):
 
 def softmax(x):
     exps = np.exp(x)
-    return (exps.T / np.sum(exps,axis=1)).T
-
+    return (exps.T / np.sum(exps,axis=1)).T #each column in exps.T is divided by the latter in sequence
+                                            #python can divide a matrix by a vector if they have one common
+                                            #dimension
 
 def d_softmax(x):
     return softmax(x) * (1-softmax(x))
@@ -66,7 +73,7 @@ def predict(X, theta_1, theta_2, theta_3):
 
 def compute_loss(X, y, theta_1, theta_2, theta_3):
     h = predict(X, theta_1, theta_2, theta_3)
-    J = -np.sum(y*np.log(h), axis=0)
+    J = -np.sum(y*np.log(h), axis=1)
     return J
 
 
